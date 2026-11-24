@@ -1,0 +1,74 @@
+name: Build iOS (unsigned IPA)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Native Liquid Glass build: require the iOS 27 SDK
+      - uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '27'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Generate iOS project and add packages
+        run: |
+          chmod +x setup.sh
+          ./setup.sh
+
+      - name: Build (no codesign)
+        working-directory: app
+        run: |
+          set -o pipefail
+          flutter build ios --release --no-codesign -v 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+
+      # لو البناء فشل: اطبع الأخطاء الحقيقية (Dart / Swift / ObjC / Pods)
+      - name: Show build errors
+        if: failure()
+        run: |
+          echo "===== error lines ====="
+          grep -nE "error:|Error:|\\*\\* BUILD FAILED|requires a development team|Undefined symbols|ld: " build.log | head -80 || true
+          echo "===== last 120 lines ====="
+          tail -n 120 build.log
+
+      # تشخيص: هل الزجاج النيتيف (UIGlassEffect) اتبنى فعلاً جوّه التطبيق؟
+      - name: Diagnose Liquid Glass support
+        working-directory: app
+        run: |
+          xcodebuild -version
+          SDK_VERSION="$(xcrun --sdk iphoneos --show-sdk-version)"
+          echo "iphoneos SDK: ${SDK_VERSION}"
+          SDK_MAJOR="${SDK_VERSION%%.*}"
+          if [ "$SDK_MAJOR" -lt 27 ]; then
+            echo "ERROR: iOS 27 SDK is required; found ${SDK_VERSION}"
+            exit 1
+          fi
+          found=0
+          for f in build/ios/iphoneos/Runner.app/Frameworks/*.framework; do
+            b="$f/$(basename "$f" .framework)"
+            if strings "$b" 2>/dev/null | grep -q UIGlassEffect; then
+              echo "UIGlassEffect FOUND in $b"; found=1
+            fi
+          done
+          if [ "$found" = "0" ]; then echo "UIGlassEffect NOT FOUND in any framework"; fi
+
+      - name: Package IPA
+        working-directory: app
+        run: |
+          mkdir -p Payload
+          cp -R build/ios/iphoneos/Runner.app Payload/
+          zip -qr Shaghal.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Shaghal-ipa
+          path: app/Shaghal.ipa
