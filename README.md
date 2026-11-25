@@ -27,7 +27,7 @@ A black, Liquid Glass audio and video player for iPhone, built with Flutter. It 
 
 - **Plays (almost) everything.** Powered by [media_kit](https://pub.dev/packages/media_kit) (libmpv / FFmpeg), so formats Apple's AVPlayer refuses, such as Opus, MKV, FLAC, OGG and WebM, play without conversion.
 - **Folder-first library.** The home screen lists your folders (artists). Tap one to see its tracks. Nested folders work too. You can also sort flat by **date** or **name**, and filter by **audio / video**.
-- **Real Liquid Glass.** On iOS 27+ the header, mini player and player controls use Apple's native glass effect (via [liquid_design](https://pub.dev/packages/liquid_design)). On older iOS versions it falls back to a frosted blur.
+- **Real Liquid Glass.** On iOS 26+ the header, mini player and player controls use Apple's official native glass effect (`UIGlassEffect`) (via [liquid_design](https://pub.dev/packages/liquid_design)). On older iOS versions it falls back to a frosted blur.
 - **Black, OLED-friendly theme** with a soft colored glow that picks up the blurred cover art of the current track.
 - **Thumbnails.** Embedded cover art for audio files, and a frame preview for videos. Thumbnails are generated lazily and cached on disk. Files without art get a stable gradient.
 - **Control Center and lock screen controls.** Play, pause, next, previous and seeking, with title, artist (taken from the folder name) and artwork. Headphone buttons work, and playback pauses on calls or when headphones are unplugged.
@@ -89,7 +89,7 @@ setup.sh / setup.ps1         project generation scripts
 2. Open **Actions → Build iOS (unsigned IPA) → Run workflow**.
 3. Download the `Shaghal-ipa` artifact when the run finishes.
 
-The workflow runs on a macOS runner with the Xcode 27 with the iOS 27 SDK (required for native Liquid Glass).
+The workflow runs on a macOS runner with the latest stable Xcode and the iOS 26 SDK (required for native Liquid Glass - Liquid Glass ships with the iOS 26 SDK; there is no iOS 27 SDK).
 
 ### Install the IPA on your iPhone from Windows or Linux
 
@@ -133,7 +133,7 @@ Tip: name each folder after the artist. The folder name is shown as the artist i
 
 ## Known limitations
 
-- Native Liquid Glass requires iOS 27 or newer on the device. Older versions get a frosted fallback.
+- Native Liquid Glass requires iOS 26 or newer on the device. Older versions get a frosted fallback.
 - Video thumbnails on iOS only work for formats AVFoundation can decode (mp4, mov, m4v). MKV, WebM and AVI show a gradient placeholder.
 - Cover art embedded in some Opus files may not be detected.
 - Folder import relies on the iOS document picker's security-scoped access and may fail for some locations. Importing individual files is more reliable.
