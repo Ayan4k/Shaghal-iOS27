@@ -59,8 +59,8 @@ jobs:
             [ -e "$f" ] && bins="$bins $f/$(basename "$f" .framework)"
           done
           for b in $bins; do
-            # ممنوع grep -q هنا: بيخرج بدري فيضرب strings بـ SIGPIPE ومع pipefail بيطلع 141 = NOT FOUND غلط
-            if [ -f "$b" ] && strings -a "$b" 2>/dev/null | grep UIGlassEffect >/dev/null 2>&1; then
+            # grep مباشرة على الباينري: strings على ماك بيشوف الـ sections بس ومش بيقرا جدول الرموز في LINKEDIT
+            if [ -f "$b" ] && grep -aq UIGlassEffect "$b"; then
               echo "UIGlassEffect FOUND in $b"; found=1
             fi
           done
