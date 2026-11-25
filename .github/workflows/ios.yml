@@ -53,13 +53,17 @@ jobs:
             exit 1
           fi
           found=0
+          # البلجن بتتلحم static جوّه باينري التطبيق نفسه، فالفحص لازم يشمل Runner مش الفريموركس بس
+          bins="build/ios/iphoneos/Runner.app/Runner"
           for f in build/ios/iphoneos/Runner.app/Frameworks/*.framework; do
-            b="$f/$(basename "$f" .framework)"
-            if strings "$b" 2>/dev/null | grep -q UIGlassEffect; then
+            [ -e "$f" ] && bins="$bins $f/$(basename "$f" .framework)"
+          done
+          for b in $bins; do
+            if [ -f "$b" ] && strings "$b" 2>/dev/null | grep -q UIGlassEffect; then
               echo "UIGlassEffect FOUND in $b"; found=1
             fi
           done
-          if [ "$found" = "0" ]; then echo "UIGlassEffect NOT FOUND in any framework"; fi
+          if [ "$found" = "0" ]; then echo "UIGlassEffect NOT FOUND (checked app binary and frameworks)"; fi
 
       - name: Package IPA
         working-directory: app
